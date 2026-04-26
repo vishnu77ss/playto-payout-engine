@@ -21,7 +21,7 @@ without ever blocking an HTTP request.
 ## 2. Data model (ER diagram)
 
 ![ER Diagram](diagrams/er.png)
-```
+---
 
 **The single design choice that drives everything: a single append-only
 LedgerEntry table.** No row is ever updated — failed payouts get a
