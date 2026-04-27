@@ -1,0 +1,113 @@
+services:
+  # ── Django API (gunicorn) ──────────────────────────────────────────────────
+  - type: web
+    name: playto-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate"
+    startCommand: "gunicorn playto.wsgi --bind 0.0.0.0:$PORT"
+    plan: free
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://playto-frontend.onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playto-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+
+  # ── Celery worker ─────────────────────────────────────────────────────────
+  - type: worker
+    name: playto-celery-worker
+    runtime: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A playto worker -l info"
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: playto-backend
+          envVarKey: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playto-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+
+  # ── Celery beat (scheduler) ───────────────────────────────────────────────
+  - type: worker
+    name: playto-celery-beat
+    runtime: python
+    rootDir: backend
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A playto beat -l info"
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: playto-backend
+          envVarKey: SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: playto-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: playto-redis
+          property: connectionString
+
+  # ── React / Vite static site ──────────────────────────────────────────────
+  - type: web
+    name: playto-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE
+        value: "https://playto-backend.onrender.com/api/v1"
+
+  # ── Redis (Key Value) ─────────────────────────────────────────────────────
+  - type: redis
+    name: playto-redis
+    plan: free
+    ipAllowList: []
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+databases:
+  - name: playto-db
+    databaseName: playto
+    plan: free

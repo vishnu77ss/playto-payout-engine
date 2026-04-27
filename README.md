@@ -254,6 +254,93 @@ Request body for the POST:
 
 ---
 
+## Deploying to Render (free tier)
+
+Everything is declared in `render.yaml` at the project root. Render
+reads it automatically when you connect the repo — no manual service
+creation needed.
+
+### Prerequisites
+
+- A [Render](https://render.com) account (free)
+- The repo pushed to GitHub (see git commands below)
+
+### Step-by-step
+
+**1. Push to GitHub**
+
+```bash
+git init
+git add .
+git commit -m "initial commit"
+gh repo create playto-payout-engine --public --source=. --push
+# or: git remote add origin https://github.com/YOUR_USER/playto-payout-engine.git
+#     git push -u origin main
+```
+
+**2. Create a Blueprint on Render**
+
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New** → **Blueprint**
+2. Connect your GitHub account if you haven't already
+3. Select the `playto-payout-engine` repo
+4. Render reads `render.yaml` and shows you all 6 services to create:
+   - `playto-backend` (web)
+   - `playto-celery-worker` (worker)
+   - `playto-celery-beat` (worker)
+   - `playto-frontend` (static site)
+   - `playto-redis` (Redis)
+   - `playto-db` (PostgreSQL)
+5. Click **Apply** — Render provisions everything and starts the builds
+
+**3. Wait for builds (~3–5 min)**
+
+Watch the `playto-backend` build log. It runs:
+```
+pip install -r requirements.txt
+python manage.py collectstatic --no-input
+python manage.py migrate
+```
+All three must succeed before the service goes live.
+
+**4. Seed the database**
+
+Once `playto-backend` is live:
+1. Go to its Render dashboard page → **Shell** tab
+2. Run:
+   ```bash
+   python manage.py seed_data
+   ```
+This creates 3 merchants with credit history so the frontend has data to show.
+
+**5. Open the frontend**
+
+Your frontend URL is `https://playto-frontend.onrender.com` (or whatever
+Render assigned). Open it — merchants, balances, and the payout form
+should all work.
+
+### Notes on free tier
+
+- **Spin-down**: Free web services sleep after 15 min of inactivity.
+  The first request after sleep takes ~30s to wake up.
+- **PostgreSQL**: Free Render Postgres databases expire after 90 days.
+  Export your data before then if needed.
+- **Workers**: Celery worker + beat are included in `render.yaml`. If
+  Render restricts background workers on your account, payouts will
+  stay in `pending` — you can still demo the API and the idempotency /
+  concurrency behaviour without them.
+
+### Updating the CORS origin
+
+If Render gives your frontend a different URL than
+`playto-frontend.onrender.com`, update `CORS_ALLOWED_ORIGINS` on the
+`playto-backend` service:
+
+Dashboard → `playto-backend` → **Environment** → edit
+`CORS_ALLOWED_ORIGINS` → paste the real frontend URL → **Save**.
+The service redeploys automatically.
+
+---
+
 ## Notes
 
 - All amounts are stored as `BigIntegerField` in **paise**. There are
