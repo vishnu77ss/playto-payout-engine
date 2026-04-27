@@ -6,6 +6,17 @@ also exported as Excalidraw JSON in `/diagrams/`.
 
 ---
 
+## Live demo
+
+| | URL |
+|---|---|
+| Frontend | [playto-frontend-v8h9.onrender.com](https://playto-frontend-v8h9.onrender.com) |
+| Backend API | [playto-backend-q8w0.onrender.com/api/v1/](https://playto-backend-q8w0.onrender.com/api/v1/) |
+
+Hosted on Render's free tier — first request after idle takes ~30 s to wake up. Database is seeded with 3 merchants so you can submit a payout immediately.
+
+---
+
 ## 1. Architecture
 
 ![Architecture](diagrams/architecture.png)

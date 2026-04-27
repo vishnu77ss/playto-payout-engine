@@ -11,6 +11,19 @@ state machine, and a retry sweep for stuck transfers.
 
 ---
 
+## Live demo
+
+| | URL |
+|---|---|
+| Frontend | [playto-frontend-v8h9.onrender.com](https://playto-frontend-v8h9.onrender.com) |
+| Backend API | [playto-backend-q8w0.onrender.com/api/v1/](https://playto-backend-q8w0.onrender.com/api/v1/) |
+
+Hosted on Render's free tier — the first request after idle takes ~30 seconds to wake the server up.
+
+The production database is seeded with 3 sample merchants (**Acme Design Studio**, **Brightline Freelance**, **Cloudpath Systems**) so you can select one and submit a payout immediately.
+
+---
+
 ## Stack
 
 | Layer       | Tech                                          |
