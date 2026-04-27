@@ -4,7 +4,7 @@ services:
     name: playto-backend
     runtime: python
     rootDir: backend
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate && python manage.py seed_data"
     startCommand: "gunicorn playto.wsgi --bind 0.0.0.0:$PORT"
     plan: free
     envVars:
@@ -15,7 +15,7 @@ services:
       - key: ALLOWED_HOSTS
         value: ".onrender.com,localhost"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://playto-frontend.onrender.com,https://playto-frontend-q8w0.onrender.com"
+        value: "https://playto-frontend-v8h9.onrender.com"
       - key: DATABASE_URL
         fromDatabase:
           name: playto-db
